@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>协作元认知环境 - 从个体深思到群体智慧</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F2;
+            color: #3D405B;
+        }
+        .accent-color { color: #81B29A; }
+        .accent-bg { background-color: #81B29A; }
+        .secondary-text { color: #6B7280; }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .nav-link {
+            transition: color 0.3s;
+            position: relative;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #81B29A;
+        }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #81B29A;
+            border-radius: 1px;
+        }
+        .section {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 3rem;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.6s ease;
+        }
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 0.25rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background-color: #FFFFFF;
+            border: 3px solid #81B29A;
+            transition: all 0.3s ease;
+        }
+        .timeline-item:hover::before {
+            transform: scale(1.2);
+            background-color: #81B29A;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #81B29A, rgba(129, 178, 154, 0.3));
+        }
+        .pain-point {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s ease;
+        }
+        .pain-point.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .value-item {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        .value-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .bridge-step-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .bridge-step-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        .step-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .training-mode {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .training-mode:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(129, 178, 154, 0.3);
+        }
+        .training-mode.active {
+            background-color: #81B29A !important;
+            color: white !important;
+            border-color: #81B29A !important;
+        }
+        .floating-nav {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .floating-nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(129, 178, 154, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .floating-nav-dot.active {
+            background: #81B29A;
+            transform: scale(1.3);
+        }
+        .floating-nav-dot:hover {
+            background: #81B29A;
+            transform: scale(1.1);
+        }
+        .concept-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .concept-card:hover {
+            transform: scale(1.02);
+        }
+        .concept-card.selected {
+            border-color: #81B29A !important;
+            background-color: rgba(129, 178, 154, 0.1) !important;
+        }
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(to right, #81B29A, #6B9A7E);
+            z-index: 9999;
+            transition: width 0.3s ease;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        .challenge-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .challenge-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        .srl-cycle-card {
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+        .srl-cycle-card:hover {
+            transform: scale(1.05);
+        }
+        .ethics-card {
+            transition: all 0.3s ease;
+        }
+        .ethics-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progress-bar"></div>
+
+    <!-- Floating Navigation -->
+    <div class="floating-nav" id="floating-nav">
+        <div class="floating-nav-dot active" data-section="hero"></div>
+        <div class="floating-nav-dot" data-section="painpoints"></div>
+        <div class="floating-nav-dot" data-section="solution"></div>
+        <div class="floating-nav-dot" data-section="demo"></div>
+        <div class="floating-nav-dot" data-section="bridge"></div>
+        <div class="floating-nav-dot" data-section="ethics"></div>
+        <div class="floating-nav-dot" data-section="vision"></div>
+    </div>
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold accent-color">协作元认知环境</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#painpoints" class="nav-link font-medium">综合鸿沟</a>
+                <a href="#solution" class="nav-link font-medium">AI协同调节</a>
+                <a href="#demo" class="nav-link font-medium">交互演示</a>
+                <a href="#bridge" class="nav-link font-medium">个体到群体</a>
+                <a href="#ethics" class="nav-link font-medium">AI伦理</a>
+                <a href="#vision" class="nav-link font-medium">未来愿景</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-4 6h4"></path></svg>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="section py-20 md:py-32 text-center bg-white visible">
+            <div class="container mx-auto px-6">
+                <div class="float-animation mb-8">
+                    <div class="text-8xl mb-6">🧠💡🤝</div>
+                </div>
+                <h2 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">从个体深思<br><span class="accent-color">到群体智慧</span></h2>
+                <p class="text-lg md:text-xl secondary-text max-w-3xl mx-auto mb-8">
+                    基于飞书多维表格的AI学习生态，四层递进的价值创造，自然地从解决个体痛点，过渡到激发群体智慧
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="#demo" class="accent-bg text-white font-bold py-3 px-8 rounded-full text-lg hover:opacity-90 transition-all hover:scale-105">
+                        🚀 体验AI协同调节
+                    </a>
+                    <a href="#bridge" class="border-2 border-gray-300 text-gray-700 font-bold py-3 px-8 rounded-full text-lg hover:border-gray-400 transition-all hover:scale-105">
+                        🔗 看智慧如何涌现
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pain Points Analysis -->
+        <section id="painpoints" class="section py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4">我们面临的真正挑战：<span class="accent-color">"综合鸿沟"</span></h3>
+                    <p class="text-lg secondary-text max-w-3xl mx-auto">大学生的核心痛点并非信息过载，而是无法将来自不同课程和文献的碎片化认识，有效连接、综合成自己的认知网络</p>
+                </div>
+                
+                <!-- 综合鸿沟核心问题 -->
+                <div class="max-w-4xl mx-auto mb-16">
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <div class="challenge-card card p-6 text-center bg-gradient-to-br from-red-50 to-orange-50 border-l-4 border-red-400">
+                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-3xl">🏝️</span>
+                            </div>
+                            <h4 class="font-bold text-lg mb-3 text-red-700">知识的孤岛</h4>
+                            <p class="text-sm secondary-text">笔记分散在各处，看似丰富有条，实则互不关联。我们记得事实，却看不见事实背后的联系。</p>
+                        </div>
+                        <div class="challenge-card card p-6 text-center bg-gradient-to-br from-orange-50 to-yellow-50 border-l-4 border-orange-400">
+                            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-3xl">⚖️</span>
+                            </div>
+                            <h4 class="font-bold text-lg mb-3 text-orange-700">工具的矛盾</h4>
+                            <p class="text-sm secondary-text">现有工具要么过于结构化（如Notion），限制了思维的自由流动；要么过于复杂（如Obsidian），学习成本高昂且不利于协作。</p>
+                            <div class="flex justify-center gap-2 mt-4">
+                                <div class="w-8 h-8 bg-gray-300 rounded flex items-center justify-center">?</div>
+                                <div class="w-8 h-8 bg-gray-300 rounded flex items-center justify-center">?</div>
+                                <div class="w-8 h-8 bg-gray-300 rounded flex items-center justify-center">?</div>
+                                <div class="w-8 h-8 bg-gray-300 rounded flex items-center justify-center">?</div>
+                            </div>
+                        </div>
+                        <div class="challenge-card card p-6 text-center bg-gradient-to-br from-purple-50 to-indigo-50 border-l-4 border-purple-400">
+                            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-3xl">🤖</span>
+                            </div>
+                            <h4 class="font-bold text-lg mb-3 text-purple-700">被动式AI</h4>
+                            <p class="text-sm secondary-text">多数AI工具旨在"外包"思考（如总结、写作），长期使用会削弱我们本应培养的核心思辨能力。</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="inline-flex items-center gap-4 px-6 py-3 bg-red-50 border-l-4 border-red-400 rounded">
+                            <span class="text-2xl">❓</span>
+                            <p class="font-semibold text-red-800">核心问题：如何让AI成为思维的催化剂，而非替代品？</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Pain Point 1 -->
+                    <div class="pain-point card p-8 border-l-4 border-red-400">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">😵‍💫</div>
+                            <div>
+                                <h4 class="font-bold text-xl mb-3">微信收藏混乱无章</h4>
+                                <div class="bg-red-50 p-4 rounded-lg mb-4">
+                                    <p class="italic text-red-700">"我微信收藏了200多篇文章，想用时总找不到..."</p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                                    <p class="font-semibold text-green-800 mb-2">解决方案：智能知识语料库</p>
+                                    <ul class="text-green-700 text-sm space-y-1">
+                                        <li>• 一键导入：飞书插件/专属邮箱，微信文章秒速入库</li>
+                                        <li>• AI自动处理：智能摘要、概念提取、自动分类</li>
+                                        <li>• 智能推荐：不仅找到相关文章，还推荐关联概念</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pain Point 2 -->
+                    <div class="pain-point card p-8 border-l-4 border-orange-400">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">🏝️</div>
+                            <div>
+                                <h4 class="font-bold text-xl mb-3">知识孤岛，缺乏深层洞察</h4>
+                                <div class="bg-orange-50 p-4 rounded-lg mb-4">
+                                    <p class="italic text-orange-700">"感觉都懂，但不知道如何串起来思考..."</p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                                    <p class="font-semibold text-green-800 mb-2">解决方案：概念关系图 + AI苏格拉底式对话</p>
+                                    <ul class="text-green-700 text-sm space-y-1">
+                                        <li>• 概念自动播种：从文章中自动提取关键概念</li>
+                                        <li>• 用户定义：用自己的话重新定义，而非死记硬背</li>
+                                        <li>• AI深度提问：引导思考概念间的因果机制</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pain Point 3 -->
+                    <div class="pain-point card p-8 border-l-4 border-purple-400">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">🎯</div>
+                            <div>
+                                <h4 class="font-bold text-xl mb-3">想要针对性训练元能力</h4>
+                                <div class="bg-purple-50 p-4 rounded-lg mb-4">
+                                    <p class="italic text-purple-700">"希望能系统性地练习跨学科思维、批判性思维..."</p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                                    <p class="font-semibold text-green-800 mb-2">解决方案：个性化AI训练教练</p>
+                                    <div class="flex flex-wrap gap-2 mt-2">
+                                        <span class="px-3 py-1 bg-purple-200 text-purple-800 rounded-full text-sm">跨学科思维</span>
+                                        <span class="px-3 py-1 bg-purple-200 text-purple-800 rounded-full text-sm">批判性思维</span>
+                                        <span class="px-3 py-1 bg-purple-200 text-purple-800 rounded-full text-sm">用户思维</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pain Point 4 -->
+                    <div class="pain-point card p-8 border-l-4 border-blue-400">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">🌀</div>
+                            <div>
+                                <h4 class="font-bold text-xl mb-3">功能缺乏连贯性</h4>
+                                <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                                    <p class="italic text-blue-700">"希望有一个清晰的价值链，避免功能混乱..."</p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                                    <p class="font-semibold text-green-800 mb-2">解决方案：完整的用户价值链</p>
+                                    <div class="flex flex-wrap items-center gap-2 text-sm mt-2">
+                                        <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded">输入</span>
+                                        <span class="text-green-600">→</span>
+                                        <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded">处理</span>
+                                        <span class="text-green-600">→</span>
+                                        <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded">思考</span>
+                                        <span class="text-green-600">→</span>
+                                        <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded">协作</span>
+                                        <span class="text-green-600">→</span>
+                                        <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded">创造</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solution Overview -->
+        <section id="solution" class="section py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4">我们的解决方案：<span class="accent-color">AI协同调节者</span></h3>
+                    <p class="text-lg secondary-text max-w-3xl mx-auto">"元认知网络者"将AI重新定义为苏格拉底式的对话伙伴，通过三大核心环节，将自我调节学习(SRL)理论无缝融入您的学习流</p>
+                </div>
+                
+                <!-- SRL理论整合 -->
+                <div class="max-w-5xl mx-auto mb-16">
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <div class="srl-cycle-card card p-8 text-center bg-gradient-to-br from-green-50 to-emerald-50 border-t-4 border-green-500">
+                            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-white text-2xl font-bold">📋</span>
+                            </div>
+                            <h4 class="font-bold text-2xl mb-4 text-green-800">计划 (Planning)</h4>
+                            <p class="text-green-700 mb-4">在"求索中枢"，为您的论文、项目设定清晰的目标和驱动性问题，结构化地应用已有知识。</p>
+                            <div class="text-sm text-green-600 bg-green-100 p-3 rounded border-l-4 border-green-400">
+                                <strong>AI角色：</strong>目标设定助手，帮助明确学习方向
+                            </div>
+                        </div>
+                        
+                        <div class="srl-cycle-card card p-8 text-center bg-gradient-to-br from-blue-50 to-cyan-50 border-t-4 border-blue-500">
+                            <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-white text-2xl font-bold">👁️</span>
+                            </div>
+                            <h4 class="font-bold text-2xl mb-4 text-blue-800">监控 (Monitoring)</h4>
+                            <p class="text-blue-700 mb-4">在"知识语料库"，统一捕获所有学习材料，并由AI自动提取核心概念与关键概念。</p>
+                            <div class="text-sm text-blue-600 bg-blue-100 p-3 rounded border-l-4 border-blue-400">
+                                <strong>AI角色：</strong>学习进度跟踪器，实时反馈学习状态
+                            </div>
+                        </div>
+                        
+                        <div class="srl-cycle-card card p-8 text-center bg-gradient-to-br from-purple-50 to-indigo-50 border-t-4 border-purple-500">
+                            <div class="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-white text-2xl font-bold">📊</span>
+                            </div>
+                            <h4 class="font-bold text-2xl mb-4 text-purple-800">评估 (Evaluating)</h4>
+                            <p class="text-purple-700 mb-4">在"概念关系图"，用自己的话定义概念，建立连接，并通过AI提问深化理解。</p>
+                            <div class="text-sm text-purple-600 bg-purple-100 p-3 rounded border-l-4 border-purple-400">
+                                <strong>AI角色：</strong>苏格拉底式教练，引导深度思考
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="inline-flex items-center gap-4 px-8 py-4 bg-gradient-to-r from-green-50 to-purple-50 border border-green-200 rounded-lg">
+                            <span class="text-3xl">🔄</span>
+                            <div class="text-left">
+                                <p class="font-bold text-lg text-gray-800">自我调节学习循环</p>
+                                <p class="text-sm text-gray-600">AI在每个环节提供个性化支持，促进元认知发展</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-12">
+                    <h4 class="text-2xl font-bold mb-4">四层递进的<span class="accent-color">价值创造</span></h4>
+                    <p class="text-lg secondary-text max-w-3xl mx-auto">每一层都能独立产生价值，用户自然地从个体向群体演进</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="chart-container">
+                        <canvas id="layersChart"></canvas>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="value-item p-6 card">
+                            <div class="flex items-center gap-4">
+                                <div class="text-4xl">📚</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2 accent-color">个体效率层</h4>
+                                    <p class="secondary-text">解决知识管理的基础痛点</p>
+                                    <div class="text-sm text-gray-500 mt-1">微信收藏整理 → AI智能分类</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="value-item p-6 card">
+                            <div class="flex items-center gap-4">
+                                <div class="text-4xl">🧠</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2 accent-color">个体能力层</h4>
+                                    <p class="secondary-text">通过AI训练提升思维能力</p>
+                                    <div class="text-sm text-gray-500 mt-1">苏格拉底式对话 → 元能力训练</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="value-item p-6 card">
+                            <div class="flex items-center gap-4">
+                                <div class="text-4xl">🔗</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2 accent-color">连接发现层</h4>
+                                    <p class="secondary-text">个体价值自然溢出，形成群体连接</p>
+                                    <div class="text-sm text-gray-500 mt-1">AI连接推荐 → 跨人员洞察</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="value-item p-6 card">
+                            <div class="flex items-center gap-4">
+                                <div class="text-4xl">✨</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2 accent-color">集体智慧层</h4>
+                                    <p class="secondary-text">群体协作产生超越个体的洞察</p>
+                                    <div class="text-sm text-gray-500 mt-1">跨学科融合 → 集体创新</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Demo -->
+        <section id="demo" class="section py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4">核心功能<span class="accent-color">交互演示</span></h3>
+                    <p class="text-lg secondary-text max-w-3xl mx-auto">体验AI如何作为"认知教练"，将建立连接转化为深度思辨活动</p>
+                </div>
+
+                <div class="max-w-6xl mx-auto">
+                    <!-- AI Socratic Dialogue Demo -->
+                    <div class="card p-8 mb-8">
+                        <h4 class="font-bold text-2xl text-center mb-6">AI苏格拉底式对话演示</h4>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h5 class="font-semibold text-lg mb-4">1. 选择要连接的概念：</h5>
+                                <div class="space-y-4">
+                                    <div id="conceptA" class="concept-card card p-4 text-center border-2 border-transparent">
+                                        <h6 class="font-bold text-lg">碳税</h6>
+                                        <p class="text-sm secondary-text mt-2">一种环境经济政策工具，通过对碳排放征税来减少温室气体排放</p>
+                                    </div>
+                                    <div id="conceptB" class="concept-card card p-4 text-center border-2 border-transparent">
+                                        <h6 class="font-bold text-lg">市场失灵</h6>
+                                        <p class="text-sm secondary-text mt-2">市场机制无法有效配置资源的情况，常出现在环境问题中</p>
+                                    </div>
+                                </div>
+                                <button id="linkButton" class="w-full accent-bg text-white font-bold py-3 rounded-lg mt-6 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                    🔗 连接概念
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <h5 class="font-semibold text-lg mb-4">2. AI生成苏格拉底式提问：</h5>
+                                <div id="aiQuestionBox" class="card p-6 min-h-[200px] flex items-center justify-center bg-gray-50">
+                                    <p id="aiQuestionText" class="secondary-text text-center italic">请选择两个概念并点击"连接"</p>
+                                </div>
+                                <div class="mt-4 text-sm secondary-text">
+                                    <p><strong>设计理念：</strong>AI不提供标准答案，而是提出启发性问题，引导用户自主思考和深度分析</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Mode Demo -->
+                    <div class="card p-8">
+                        <h4 class="font-bold text-2xl text-center mb-6">元能力训练模式演示</h4>
+                        <div class="grid md:grid-cols-3 gap-4 mb-6">
+                            <div class="training-mode card p-4 border-2 border-gray-200" data-mode="cross">
+                                <h5 class="font-bold text-lg mb-2">🌐 跨学科思维</h5>
+                                <p class="text-sm secondary-text">优先推荐来自不同学科的概念连接，培养多维度思考</p>
+                            </div>
+                            <div class="training-mode card p-4 border-2 border-gray-200" data-mode="critical">
+                                <h5 class="font-bold text-lg mb-2">🔍 批判性思维</h5>
+                                <p class="text-sm secondary-text">提问变得"尖锐"，引导质疑与多角度分析</p>
+                            </div>
+                            <div class="training-mode card p-4 border-2 border-gray-200" data-mode="user">
+                                <h5 class="font-bold text-lg mb-2">👤 用户思维</h5>
+                                <p class="text-sm secondary-text">持续回归用户需求，培养同理心和用户导向</p>
+                            </div>
+                        </div>
+                        <div id="trainingExample" class="card p-6 bg-blue-50 border-l-4 border-blue-400">
+                            <p class="font-semibold mb-2">AI训练示例：</p>
+                            <p id="trainingQuestion" class="text-blue-800">选择一个训练模式，体验AI如何调整提问风格来培养特定思维能力</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Individual to Group Bridge -->
+        <section id="bridge" class="section py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4">个体到群体的<span class="accent-color">智慧桥梁</span></h3>
+                    <p class="text-lg secondary-text max-w-3xl mx-auto">AI连接发现机制：将个体思考转化为群体洞察的催化剂</p>
+                    <div class="mt-4 text-sm bg-blue-50 text-blue-700 px-4 py-2 rounded-full inline-block">
+                        💡 点击下方步骤卡片，体验完整的协作流程
+                    </div>
+                </div>
+
+                <div class="max-w-6xl mx-auto">
+                    <div class="card p-8">
+                        <h4 class="text-xl font-bold mb-4 text-center">真实场景演示</h4>
+                        <p class="text-center secondary-text mb-8">小张(经济学)、李静(公共政策)、Klaus(环境科学)合作"可持续发展政策"项目</p>
+                        
+                        <!-- Progress Steps -->
+                        <div class="flex justify-center items-center gap-4 mb-8">
+                            <div class="step-indicator">
+                                <div id="step-indicator-1" class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm transition-all">1</div>
+                                <div class="text-xs mt-1 text-center">个体思考</div>
+                            </div>
+                            <div class="w-12 h-0.5 bg-gray-300" id="arrow-1"></div>
+                            <div class="step-indicator">
+                                <div id="step-indicator-2" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm transition-all">2</div>
+                                <div class="text-xs mt-1 text-center">AI发现</div>
+                            </div>
+                            <div class="w-12 h-0.5 bg-gray-300" id="arrow-2"></div>
+                            <div class="step-indicator">
+                                <div id="step-indicator-3" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm transition-all">3</div>
+                                <div class="text-xs mt-1 text-center">群体洞察</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-3 gap-6 mb-8">
+                            <!-- Step 1: Individual Thinking -->
+                            <div id="bridgeStep1" class="bridge-step-card cursor-pointer card p-6 border-2 border-blue-300 bg-blue-50 transition-all hover:shadow-lg" data-step="1">
+                                <div class="text-center mb-4">
+                                    <div class="text-4xl mb-3">👤</div>
+                                    <h5 class="font-bold text-lg text-blue-800">个体深度思考</h5>
+                                    <div class="text-xs text-blue-600 mt-1">点击开始 →</div>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-sm secondary-text mb-3">小张在个人知识图谱中</p>
+                                    <p class="text-sm secondary-text mb-3">连接了两个概念：</p>
+                                    <div class="flex items-center justify-center gap-2 mb-4">
+                                        <span class="px-3 py-1 bg-blue-200 text-blue-800 rounded-full text-sm">碳税</span>
+                                        <span class="text-blue-600">🔗</span>
+                                        <span class="px-3 py-1 bg-blue-200 text-blue-800 rounded-full text-sm">市场失灵</span>
+                                    </div>
+                                </div>
+                                <div id="individualAI" class="bg-white p-3 rounded border-l-4 border-blue-400 text-sm opacity-0 transition-opacity duration-500">
+                                    <p class="font-semibold text-blue-700">💭 AI苏格拉底式提问：</p>
+                                    <p class="mt-1 text-gray-700">"'碳税'在多大程度上可以被视为对'市场失灵'的一种修正？"</p>
+                                    <div class="text-xs text-gray-500 mt-2">→ 引导个体深度思考</div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: AI Discovery -->
+                            <div id="bridgeStep2" class="bridge-step-card cursor-pointer card p-6 border-2 border-gray-200 bg-gray-50 transition-all hover:shadow-lg" data-step="2">
+                                <div class="text-center mb-4">
+                                    <div class="text-4xl mb-3">🤖</div>
+                                    <h5 class="font-bold text-lg text-gray-600">AI连接发现</h5>
+                                    <div class="text-xs text-gray-500 mt-1">等待激活...</div>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-sm secondary-text mb-3">AI自动扫描团队</p>
+                                    <p class="text-sm secondary-text mb-3">知识图谱，寻找关联：</p>
+                                    <div class="space-y-2 mb-4 text-xs">
+                                        <div class="flex items-center gap-2 justify-center">
+                                            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                                            <span>李静: "政策可接受性"</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 justify-center">
+                                            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                                            <span>Klaus: "Waldsterben"</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="aiDiscovery" class="bg-white p-3 rounded border-l-4 border-green-400 text-sm opacity-0 transition-opacity duration-500">
+                                    <p class="font-semibold text-green-700">🔍 AI发现关联：</p>
+                                    <p class="mt-1 text-gray-700">检测到跨学科连接机会！</p>
+                                    <div class="text-xs text-gray-500 mt-2">→ 智能推荐相关概念</div>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Group Insight -->
+                            <div id="bridgeStep3" class="bridge-step-card cursor-pointer card p-6 border-2 border-gray-200 bg-gray-50 transition-all hover:shadow-lg" data-step="3">
+                                <div class="text-center mb-4">
+                                    <div class="text-4xl mb-3">✨</div>
+                                    <h5 class="font-bold text-lg text-gray-600">群体洞察涌现</h5>
+                                    <div class="text-xs text-gray-500 mt-1">等待激活...</div>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-sm secondary-text mb-3">AI向团队成员</p>
+                                    <p class="text-sm secondary-text mb-3">推送洞察提示：</p>
+                                    <div class="text-xs text-gray-500 mb-4">
+                                        📤 自动通知相关成员<br>
+                                        🔗 建立跨学科连接
+                                    </div>
+                                </div>
+                                <div id="groupInsight" class="bg-white p-3 rounded border-l-4 border-purple-400 text-sm opacity-0 transition-opacity duration-500">
+                                    <p class="font-semibold text-purple-700">💡 AI洞察提示：</p>
+                                    <p class="mt-1 text-gray-700">"一个经济上完美的碳税政策，是否会因为忽略了政治可行性和生态复杂性而失败？"</p>
+                                    <div class="text-xs text-gray-500 mt-2">→ 引发跨学科讨论</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mb-6">
+                            <button id="runBridgeDemo" class="accent-bg text-white font-bold py-3 px-8 rounded-full text-lg hover:opacity-90 transition-all mr-4">
+                                ▶ 自动演示完整流程
+                            </button>
+                            <button id="resetBridgeDemo" class="border-2 border-gray-300 text-gray-700 font-bold py-3 px-6 rounded-full text-lg hover:border-gray-400 transition-all">
+                                🔄 重置
+                            </button>
+                        </div>
+
+                        <div id="bridgeResult" class="card p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-400" style="display: none;">
+                            <div class="flex items-start gap-4">
+                                <div class="text-3xl">🎯</div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 text-purple-800">最终成果：集体智慧的结晶</h5>
+                                    <p class="text-gray-800 italic text-lg mb-2">"有效的环境政策需要经济效率、政治可行性和生态科学的三重平衡"</p>
+                                    <p class="text-sm secondary-text">—— 这个洞察是单个学科无法产生的集体智慧</p>
+                                    <div class="mt-3 text-xs bg-white p-2 rounded border">
+                                        <strong>价值说明：</strong> 通过AI连接发现，个体的思考自动触发了团队层面的深度讨论，产生了跨学科的创新见解
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Ethics and Trust -->
+        <section id="ethics" class="section py-16 md:py-24 bg-gradient-to-br from-gray-50 to-blue-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4">伦理内建：<span class="accent-color">值得信赖的AI</span></h3>
+                    <p class="text-lg secondary-text max-w-3xl mx-auto">我们坚信，负责任的创新必须将伦理置于设计的核心</p>
+                </div>
+                
+                <div class="max-w-6xl mx-auto">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <!-- 数据隐私与安全 -->
+                        <div class="ethics-card card p-8 text-center bg-white border-t-4 border-blue-500">
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-blue-600 text-2xl">🛡️</span>
+                            </div>
+                            <h4 class="font-bold text-xl mb-4 text-blue-800">数据隐私与安全</h4>
+                            <p class="text-sm text-gray-700 mb-4">数据完全存储在用户自己的飞书工作区，您拥有对数据的控制权。</p>
+                            <div class="text-xs text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
+                                用户数据主权 • 本地化存储 • 端到端加密
+                            </div>
+                        </div>
+                        
+                        <!-- 人的主体性 -->
+                        <div class="ethics-card card p-8 text-center bg-white border-t-4 border-purple-500">
+                            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-purple-600 text-2xl">👤</span>
+                            </div>
+                            <h4 class="font-bold text-xl mb-4 text-purple-800">人的主体性</h4>
+                            <p class="text-sm text-gray-700 mb-4">AI永远只是指导而非建议者，最终判断权始终在您手中。</p>
+                            <div class="text-xs text-purple-600 bg-purple-50 p-3 rounded border border-purple-200">
+                                启发式提问 • 人机协作 • 自主决策
+                            </div>
+                        </div>
+                        
+                        <!-- 公平性与偏见缓解 -->
+                        <div class="ethics-card card p-8 text-center bg-white border-t-4 border-yellow-500">
+                            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-yellow-600 text-2xl">⚖️</span>
+                            </div>
+                            <h4 class="font-bold text-xl mb-4 text-yellow-800">公平性与偏见缓解</h4>
+                            <p class="text-sm text-gray-700 mb-4">核心功能是生成开放式问题，这本身就是一种促进公平、拓宽视野的工具。</p>
+                            <div class="text-xs text-yellow-600 bg-yellow-50 p-3 rounded border border-yellow-200">
+                                多元视角 • 文化包容 • 批判思维
+                            </div>
+                        </div>
+                        
+                        <!-- 透明性与可解释性 -->
+                        <div class="ethics-card card p-8 text-center bg-white border-t-4 border-green-500">
+                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-green-600 text-2xl">🔍</span>
+                            </div>
+                            <h4 class="font-bold text-xl mb-4 text-green-800">透明性与可解释性</h4>
+                            <p class="text-sm text-gray-700 mb-4">AI推荐的指令（Prompt）完全透明，用户可审查、可优化。</p>
+                            <div class="text-xs text-green-600 bg-green-50 p-3 rounded border border-green-200">
+                                算法透明 • 过程可视 • 用户可控
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 text-center">
+                        <div class="card p-8 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200">
+                            <div class="flex items-center justify-center gap-4 mb-4">
+                                <span class="text-4xl">🤝</span>
+                                <h4 class="text-2xl font-bold text-gray-800">我们的承诺</h4>
+                            </div>
+                            <p class="text-lg text-gray-700 max-w-3xl mx-auto">
+                                在技术创新的每一步，我们都将伦理考量置于首位。我们的目标不仅是构建功能强大的AI工具，
+                                更是打造一个尊重人类尊严、促进公平学习、保护用户隐私的可信赖平台。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Future Vision -->
+        <section id="vision" class="section py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4">学习的未来：从<span class="accent-color">信息管理</span>到<span class="accent-color">认知发展</span></h3>
+                    <p class="text-lg secondary-text max-w-3xl mx-auto">我们的愿景是开启一个从个体赋能到系统性优化的全新教育范式</p>
+                </div>
+                
+                <div class="max-w-4xl mx-auto">
+                    <div class="relative">
+                        <div class="timeline-line"></div>
+                        <div class="space-y-12">
+                            <div class="timeline-item">
+                                <div class="card p-6">
+                                    <h4 class="font-bold text-xl mb-3 flex items-center gap-3">
+                                        <span class="text-2xl">🚀</span>
+                                        阶段一：协作元认知环境
+                                    </h4>
+                                    <p class="secondary-text">通过AI引导，打破集体洞察孤岛，在课程和团队层面激发协作创新，培养深度学习习惯。</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="card p-6">
+                                    <h4 class="font-bold text-xl mb-3 flex items-center gap-3">
+                                        <span class="text-2xl">🧠</span>
+                                        阶段二：认知模式分析
+                                    </h4>
+                                    <p class="secondary-text">通过分析团队互动数据，提供关于"团队如何思考"的诊断与反馈，优化协作效率和学习成果。</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="card p-6">
+                                    <h4 class="font-bold text-xl mb-3 flex items-center gap-3">
+                                        <span class="text-2xl">🏫</span>
+                                        阶段三：赋能教育机构
+                                    </h4>
+                                    <p class="secondary-text">通过匿名的聚合数据，为高校提供跨学科教学设计的有效性评估，实现以证据为本的教学改革。</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="card p-6">
+                                    <h4 class="font-bold text-xl mb-3 flex items-center gap-3">
+                                        <span class="text-2xl">🌍</span>
+                                        阶段四：终身学习伙伴
+                                    </h4>
+                                    <p class="secondary-text">当用户步入职场，工具随之进化，帮助其管理职业发展中的持续学习需求，成为贯穿整个职业生涯的伙伴。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16">
+                    <div class="text-center mb-12">
+                        <h4 class="text-3xl font-bold mb-4">🎯 项目价值总结</h4>
+                        <p class="text-lg secondary-text">创新性与实用性并重的完整解决方案</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <!-- 创新突破 -->
+                        <div class="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-blue-500">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xl">✨</span>
+                                </div>
+                                <h5 class="text-2xl font-bold text-blue-800">创新突破</h5>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div>
+                                        <h6 class="font-semibold text-gray-800">重新定义AI在教育中的角色</h6>
+                                        <p class="text-sm text-gray-600 mt-1">从答案提供者转变为苏格拉底式思维教练</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div>
+                                        <h6 class="font-semibold text-gray-800">四层价值创造的完整架构</h6>
+                                        <p class="text-sm text-gray-600 mt-1">从个体效率到集体智慧的递进设计</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div>
+                                        <h6 class="font-semibold text-gray-800">个体到群体的自然演进</h6>
+                                        <p class="text-sm text-gray-600 mt-1">突破现有工具的协作壁垒</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 实用价值 -->
+                        <div class="card p-8 bg-gradient-to-br from-green-50 to-emerald-50 border-l-4 border-green-500">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xl">🚀</span>
+                                </div>
+                                <h5 class="text-2xl font-bold text-green-800">实用价值</h5>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div>
+                                        <h6 class="font-semibold text-gray-800">基于飞书的高可行性</h6>
+                                        <p class="text-sm text-gray-600 mt-1">利用成熟平台能力，降低开发风险</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div>
+                                        <h6 class="font-semibold text-gray-800">解决真实用户痛点</h6>
+                                        <p class="text-sm text-gray-600 mt-1">针对学生实际需求的精准方案</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div>
+                                        <h6 class="font-semibold text-gray-800">可规模化的商业模式</h6>
+                                        <p class="text-sm text-gray-600 mt-1">从个人工具到教育生态的延展性</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 核心价值主张与项目结语 -->
+                    <div class="card p-12 bg-gradient-to-r from-purple-50 via-pink-50 to-indigo-50 border border-purple-200">
+                        <div class="text-center">
+                            <div class="text-8xl mb-6">🧠💡🤝</div>
+                            <h4 class="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                协作元认知环境
+                            </h4>
+                            <p class="text-2xl text-gray-700 mb-4">一个真正值得期待的学习未来</p>
+                            <p class="text-xl secondary-text mb-8">让AI成为思维的伙伴，让协作产生智慧的火花</p>
+                            
+                            <!-- 项目标语 -->
+                            <div class="bg-white rounded-lg p-6 shadow-md mb-8 max-w-2xl mx-auto">
+                                <p class="text-lg font-medium text-gray-800 italic">
+                                    "从个体深思到群体智慧，我们正在构建学习的未来"
+                                </p>
+                            </div>
+                            
+                            <!-- 版权信息 -->
+                            <div class="border-t border-purple-200 pt-6">
+                                <p class="text-sm text-gray-500">© 2025 AI for Learning 竞赛方案展示</p>
+                                <p class="text-xs text-gray-400 mt-2">协作元认知环境 - 基于飞书多维表格的AI学习生态</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Smooth scrolling and navigation
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.section');
+            const floatingNavDots = document.querySelectorAll('.floating-nav-dot');
+            const progressBar = document.getElementById('progress-bar');
+
+            // Intersection Observer for sections
+            const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        
+                        // Animate child elements
+                        const painPoints = entry.target.querySelectorAll('.pain-point');
+                        const valueItems = entry.target.querySelectorAll('.value-item');
+                        const timelineItems = entry.target.querySelectorAll('.timeline-item');
+                        
+                        painPoints.forEach((item, index) => {
+                            setTimeout(() => item.classList.add('visible'), index * 200);
+                        });
+                        
+                        valueItems.forEach((item, index) => {
+                            setTimeout(() => item.classList.add('visible'), index * 300);
+                        });
+                        
+                        timelineItems.forEach((item, index) => {
+                            setTimeout(() => item.classList.add('visible'), index * 400);
+                        });
+
+                        // Update floating navigation
+                        const sectionId = entry.target.id;
+                        floatingNavDots.forEach(dot => {
+                            dot.classList.remove('active');
+                            if (dot.dataset.section === sectionId) {
+                                dot.classList.add('active');
+                            }
+                        });
+
+                        // Update navigation links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${sectionId}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            sections.forEach(section => sectionObserver.observe(section));
+
+            // Progress bar
+            window.addEventListener('scroll', () => {
+                const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+                progressBar.style.width = scrolled + '%';
+            });
+
+            // Navigation click handlers
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href');
+                    document.querySelector(targetId).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            floatingNavDots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const sectionId = dot.dataset.section;
+                    document.getElementById(sectionId).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Chart initialization
+            const ctx = document.getElementById('layersChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['个体效率层', '个体能力层', '连接发现层', '集体智慧层'],
+                    datasets: [{
+                        data: [25, 25, 25, 25],
+                        backgroundColor: [
+                            'rgba(129, 178, 154, 0.8)',
+                            'rgba(107, 114, 128, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            '#81B29A',
+                            '#6B7280',
+                            '#3B82F6',
+                            '#8B5CF6'
+                        ],
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: "'Noto Sans SC', sans-serif"
+                                },
+                                padding: 20
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            // Concept selection demo
+            const conceptA = document.getElementById('conceptA');
+            const conceptB = document.getElementById('conceptB');
+            const linkButton = document.getElementById('linkButton');
+            const aiQuestionBox = document.getElementById('aiQuestionBox');
+            const aiQuestionText = document.getElementById('aiQuestionText');
+            
+            let selectedA = false;
+            let selectedB = false;
+
+            conceptA.addEventListener('click', () => {
+                selectedA = !selectedA;
+                conceptA.classList.toggle('selected', selectedA);
+                updateLinkButtonState();
+            });
+
+            conceptB.addEventListener('click', () => {
+                selectedB = !selectedB;
+                conceptB.classList.toggle('selected', selectedB);
+                updateLinkButtonState();
+            });
+
+            function updateLinkButtonState() {
+                linkButton.disabled = !(selectedA && selectedB);
+            }
+
+            linkButton.addEventListener('click', () => {
+                if (linkButton.disabled) return;
+                
+                aiQuestionText.textContent = '🤔 AI正在思考...';
+                aiQuestionBox.classList.add('pulse-animation');
+
+                setTimeout(() => {
+                    const questions = [
+                        "'碳税'是如何具体实现对'市场失灵'这一经济学问题的修正？它的作用机制是什么？",
+                        "在何种经济情境下，'碳税'政策可能会与'市场失灵'的基本假设产生冲突或失效？",
+                        "连接'碳税'与'市场失灵'的核心逻辑是外部性理论，但这个理论在现实应用中有哪些局限性？"
+                    ];
+                    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+                    aiQuestionText.innerHTML = `<strong style="color: #81B29A;">💡 AI苏格拉底式提问：</strong><br><br>${randomQuestion}`;
+                    aiQuestionBox.classList.remove('pulse-animation');
+                    aiQuestionBox.style.backgroundColor = '#f0fdf4';
+                }, 2000);
+            });
+            
+            updateLinkButtonState();
+
+            // Training mode demo
+            const trainingModes = document.querySelectorAll('.training-mode');
+            const trainingQuestion = document.getElementById('trainingQuestion');
+
+            const trainingExamples = {
+                cross: "您正在从经济学角度分析'碳税'，是否考虑过从**社会学、心理学或生物学**的角度会得出什么不同的洞察？跨学科的视角可能会揭示哪些被忽视的因素？",
+                critical: "支持'碳税'的论据背后有哪些**未言明的假设**？这些假设在不同的文化和经济背景下是否依然成立？是否存在被**故意忽略的反对观点**？",
+                user: "如果您是一个**中小企业主**面对碳税政策，您最关心的**核心痛点**是什么？现有的政策设计是否真正考虑了不同用户群体的**实际需求和能力**？"
+            };
+
+            trainingModes.forEach(mode => {
+                mode.addEventListener('click', () => {
+                    // Reset all modes
+                    trainingModes.forEach(m => m.classList.remove('active'));
+                    mode.classList.add('active');
+                    
+                    const modeType = mode.dataset.mode;
+                    const modeNames = {
+                        cross: '🌐 跨学科思维训练',
+                        critical: '🔍 批判性思维训练',
+                        user: '👤 用户思维训练'
+                    };
+                    
+                    document.querySelector('#trainingExample p').innerHTML = `<strong>${modeNames[modeType]}示例：</strong>`;
+                    trainingQuestion.innerHTML = trainingExamples[modeType];
+                });
+            });
+
+            // Bridge demo
+            const runBridgeBtn = document.getElementById('runBridgeDemo');
+            const resetBridgeBtn = document.getElementById('resetBridgeDemo');
+            const bridgeStepCards = document.querySelectorAll('.bridge-step-card');
+            const stepIndicators = ['step-indicator-1', 'step-indicator-2', 'step-indicator-3'];
+            const arrows = ['arrow-1', 'arrow-2'];
+            
+            let currentActiveStep = 0;
+            
+            // Reset bridge demo
+            function resetBridgeDemo() {
+                // Reset step indicators
+                stepIndicators.forEach((id, index) => {
+                    const indicator = document.getElementById(id);
+                    if (index === 0) {
+                        indicator.className = 'w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm transition-all';
+                    } else {
+                        indicator.className = 'w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm transition-all';
+                    }
+                });
+                
+                // Reset arrows
+                arrows.forEach(id => {
+                    document.getElementById(id).className = 'w-12 h-0.5 bg-gray-300';
+                });
+                
+                // Reset step cards
+                bridgeStepCards.forEach((card, index) => {
+                    card.classList.remove('border-green-400', 'bg-green-50', 'border-purple-400', 'bg-purple-50');
+                    const statusDiv = card.querySelector('.text-xs');
+                    
+                    if (index === 0) {
+                        card.classList.add('border-blue-300', 'bg-blue-50');
+                        card.querySelector('h5').className = 'font-bold text-lg text-blue-800';
+                        statusDiv.textContent = '点击开始 →';
+                        statusDiv.className = 'text-xs text-blue-600 mt-1';
+                    } else {
+                        card.classList.remove('border-blue-300', 'bg-blue-50');
+                        card.classList.add('border-gray-200', 'bg-gray-50');
+                        card.querySelector('h5').className = 'font-bold text-lg text-gray-600';
+                        statusDiv.textContent = '等待激活...';
+                        statusDiv.className = 'text-xs text-gray-500 mt-1';
+                    }
+                });
+                
+                // Reset AI content
+                document.getElementById('individualAI').classList.add('opacity-0');
+                document.getElementById('aiDiscovery').classList.add('opacity-0');
+                document.getElementById('groupInsight').classList.add('opacity-0');
+                document.getElementById('bridgeResult').style.display = 'none';
+                
+                currentActiveStep = 0;
+            }
+            
+            // Activate specific step
+            function activateStep(stepIndex) {
+                // Update step indicators
+                stepIndicators.forEach((id, index) => {
+                    const indicator = document.getElementById(id);
+                    if (index <= stepIndex) {
+                        if (index === stepIndex) {
+                            indicator.className = 'w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm transition-all';
+                        } else {
+                            indicator.className = 'w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm transition-all';
+                        }
+                    } else {
+                        indicator.className = 'w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm transition-all';
+                    }
+                });
+                
+                // Update arrows
+                arrows.forEach((id, index) => {
+                    const arrow = document.getElementById(id);
+                    if (index < stepIndex) {
+                        arrow.className = 'w-12 h-0.5 bg-blue-500';
+                    } else {
+                        arrow.className = 'w-12 h-0.5 bg-gray-300';
+                    }
+                });
+                
+                // Update step cards
+                bridgeStepCards.forEach((card, index) => {
+                    const statusDiv = card.querySelector('.text-xs');
+                    const titleDiv = card.querySelector('h5');
+                    
+                    // Reset all cards
+                    card.classList.remove('border-blue-300', 'bg-blue-50', 'border-green-400', 'bg-green-50', 'border-purple-400', 'bg-purple-50', 'border-gray-200', 'bg-gray-50');
+                    
+                    if (index === stepIndex) {
+                        // Active step
+                        if (index === 0) {
+                            card.classList.add('border-blue-300', 'bg-blue-50');
+                            titleDiv.className = 'font-bold text-lg text-blue-800';
+                            statusDiv.textContent = '进行中...';
+                            statusDiv.className = 'text-xs text-blue-600 mt-1';
+                        } else if (index === 1) {
+                            card.classList.add('border-green-400', 'bg-green-50');
+                            titleDiv.className = 'font-bold text-lg text-green-800';
+                            statusDiv.textContent = '正在发现...';
+                            statusDiv.className = 'text-xs text-green-600 mt-1';
+                        } else {
+                            card.classList.add('border-purple-400', 'bg-purple-50');
+                            titleDiv.className = 'font-bold text-lg text-purple-800';
+                            statusDiv.textContent = '洞察生成中...';
+                            statusDiv.className = 'text-xs text-purple-600 mt-1';
+                        }
+                    } else if (index < stepIndex) {
+                        // Completed step
+                        card.classList.add('border-green-400', 'bg-green-50');
+                        titleDiv.className = 'font-bold text-lg text-green-800';
+                        statusDiv.textContent = '✓ 已完成';
+                        statusDiv.className = 'text-xs text-green-600 mt-1';
+                    } else {
+                        // Future step
+                        card.classList.add('border-gray-200', 'bg-gray-50');
+                        titleDiv.className = 'font-bold text-lg text-gray-600';
+                        statusDiv.textContent = '等待激活...';
+                        statusDiv.className = 'text-xs text-gray-500 mt-1';
+                    }
+                });
+                
+                // Show corresponding AI content
+                const aiContents = [
+                    document.getElementById('individualAI'),
+                    document.getElementById('aiDiscovery'),
+                    document.getElementById('groupInsight')
+                ];
+                
+                aiContents.forEach((content, index) => {
+                    if (index <= stepIndex) {
+                        content.classList.remove('opacity-0');
+                    } else {
+                        content.classList.add('opacity-0');
+                    }
+                });
+                
+                // Show result if all steps completed
+                if (stepIndex === 2) {
+                    setTimeout(() => {
+                        document.getElementById('bridgeResult').style.display = 'block';
+                    }, 800);
+                }
+                
+                currentActiveStep = stepIndex;
+            }
+            
+            // Add click handlers for step cards
+            bridgeStepCards.forEach((card, index) => {
+                card.addEventListener('click', () => {
+                    if (index <= currentActiveStep + 1) {
+                        activateStep(index);
+                    }
+                });
+            });
+
+            resetBridgeBtn.addEventListener('click', resetBridgeDemo);
+
+            runBridgeBtn.addEventListener('click', () => {
+                runBridgeBtn.disabled = true;
+                runBridgeBtn.textContent = '🔄 自动演示进行中...';
+                resetBridgeDemo();
+                
+                // Auto-activate steps with delays
+                setTimeout(() => activateStep(0), 500);
+                setTimeout(() => activateStep(1), 2000);
+                setTimeout(() => activateStep(2), 3500);
+                
+                setTimeout(() => {
+                    runBridgeBtn.disabled = false;
+                    runBridgeBtn.textContent = '▶ 自动演示完整流程';
+                }, 5500);
+            });
+            
+            // Initialize bridge demo state
+            resetBridgeDemo();
+
+            // Challenge cards hover effects
+            const challengeCards = document.querySelectorAll('.challenge-card');
+            challengeCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-8px)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+
+            // SRL cycle cards hover effects
+            const srlCards = document.querySelectorAll('.srl-cycle-card');
+            srlCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'scale(1.05)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'scale(1)';
+                });
+            });
+
+            // Ethics cards hover effects
+            const ethicsCards = document.querySelectorAll('.ethics-card');
+            ethicsCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-5px)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
